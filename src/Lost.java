@@ -1,15 +1,14 @@
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Lost {
 
     public static final int INF = Integer.MAX_VALUE;
-    private final String GRASS = "G";
-    private final String WATER = "W";
-    private final String WHEEL = "M";
-    private final String OBSTACLE = "O";
-    private final String EXIT = "X";
+    private static final char GRASS = 'G';
+    private static final char WATER = 'W';
+    private static final char WHEEL = 'M';
+    private static final char OBSTACLE = 'O';
+    private static final char EXIT = 'X';
 
     private final boolean JOHN = true;
     private final boolean KATE = false;
@@ -19,7 +18,6 @@ public class Lost {
     private int exitNode;
     private final int columns;
     private final int rows;
-    // TODO change this to magicWheelTails
     private final int[] magicWheels;
 
     public Lost(int rows, int columns, int magicWheels) {
@@ -28,21 +26,27 @@ public class Lost {
         this.exitNode = -1;
         this.rows = rows;
         this.columns = columns;
-        // TODO if 0
         this.magicWheels = new int[magicWheels];
     }
 
-    private void createEdge(String cell, int head, int tail, String neighbour) {
-        if (neighbour.equals(OBSTACLE)) return;
-
-        int label = cell.equals(WATER) ? 2 : 1;
-
-        try {
-            int index = Integer.parseInt(cell);
-            cell = GRASS;
+    private char isMagicWheel(char cell, int tail) {
+        int index = Character.getNumericValue(cell);
+        if (index > 0 && index <= 9) {
             this.magicWheels[index - 1] = tail;
-        } catch (NumberFormatException ignored) {
+            return GRASS;
         }
+
+        return cell;
+    }
+
+    private void createEdge(char cell, int head, int tail, char neighbour) {
+
+        int label = cell == WATER ? 2 : 1;
+
+        // Check for magic wheel
+        cell = isMagicWheel(cell, tail);
+
+        if (neighbour == OBSTACLE) return;
 
         this.edges.add(new Edge(head, tail, label, cell));
     }
@@ -50,11 +54,9 @@ public class Lost {
     public void addMagicWheel(int r, int c, int label, int i) {
         int tail = this.magicWheels[i];
         this.edges.add(new Edge(r * this.columns + c, tail, label, WHEEL));
-
-        // TODO garbage
     }
 
-    public void addRows(String[][] grid) {
+    public void addRows(char[][] grid) {
         // NxM
         int n = this.rows;
         int m = this.columns;
@@ -63,15 +65,19 @@ public class Lost {
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < m; j++) {
 
-                String cell = grid[i][j];
+                char cell = grid[i][j];
+
                 int tail = i * m + j;
 
-                if (cell.equals(OBSTACLE)) continue;
+                if (cell == OBSTACLE) continue;
+                if (cell == EXIT) {
+                    this.exitNode = tail;
+                    continue;
+                }
 
-                if (cell.equals(EXIT)) this.exitNode = tail;
+                char neighbour;
+                int head;
 
-                String neighbour = "";
-                int head = -1;
                 // top
                 head = (i - 1) * m + j;
                 if (i - 1 >= 0) {
@@ -108,9 +114,9 @@ public class Lost {
         boolean changes = false;
 
         for (Edge e : this.edges) {
-            if (e.getType().equals(OBSTACLE)) continue;
-            if (e.getType().equals(WATER) && character) continue;
-            if (e.getType().equals(WHEEL) && !character) continue;
+            if (e.getType() == OBSTACLE
+                    || (e.getType() == WATER && character)
+                    || (e.getType() == WHEEL && !character)) continue;
 
             int tail = e.getTail();
             int head = e.getHead();

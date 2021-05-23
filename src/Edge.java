@@ -1,11 +1,11 @@
 public class Edge {
 
-    private int head;
+    private final int head;
     private final int tail;
-    private int label;
-    private final String type;
+    private final int label;
+    private final char type;
 
-    public Edge(int head, int tail, int label, String type) {
+    public Edge(int head, int tail, int label, char type) {
         this.head = head;
         this.tail = tail;
         this.label = label;
@@ -24,7 +24,7 @@ public class Edge {
         return this.label;
     }
 
-    public String getType() {
+    public char getType() {
         return this.type;
     }
 

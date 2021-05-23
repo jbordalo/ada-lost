@@ -26,10 +26,10 @@ public class Main {
 
         Lost lost = new Lost(rows, columns, magicWheels);
 
-        String[][] rowsInput = new String[rows][columns];
+        char[][] rowsInput = new char[rows][columns];
 
         for (int r = 0; r < rows; r++) {
-            String[] row = input.readLine().split("");
+            char[] row = input.readLine().toCharArray();
             rowsInput[r] = row;
         }
         lost.addRows(rowsInput);
@@ -45,16 +45,6 @@ public class Main {
             lost.addMagicWheel(r_i, c_i, t_i, m);
         }
 
-//        tokens = input.readLine().split(" ");
-//        // John's initial position
-//        int r_j = Integer.parseInt(tokens[0]);
-//        int c_j = Integer.parseInt(tokens[1]);
-//        lost.setJohn(r_j, c_j);
-        // Kate's initial position
-//        int r_k = Integer.parseInt(tokens[2]);
-//        int c_k = Integer.parseInt(tokens[3]);
-//        lost.setKate(r_k, c_k);
-
         System.out.printf("Case #%d%n", test_case);
 
         try {
@@ -62,7 +52,6 @@ public class Main {
             // John's initial position
             int r_j = Integer.parseInt(tokens[0]);
             int c_j = Integer.parseInt(tokens[1]);
-//            lost.setJohn(r_j, c_j);
             int john = lost.solveJohn(r_j, c_j);
             printResult("John", john);
         } catch (NegativeWeightCycleException e) {
