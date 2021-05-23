@@ -34,7 +34,6 @@ public class Main {
         }
         lost.addRows(rowsInput);
 
-
         for (int m = 0; m < magicWheels; m++) {
             tokens = input.readLine().split(" ");
             // Magic wheel's destination cell
