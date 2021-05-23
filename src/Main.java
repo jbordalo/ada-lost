@@ -13,7 +13,7 @@ public class Main {
         int testCases = Integer.parseInt(input.readLine());
 
         for (int i = 0; i < testCases; i++)
-            solve(input, i+1);
+            solve(input, i + 1);
 
         input.close();
     }
@@ -26,9 +26,14 @@ public class Main {
 
         Lost lost = new Lost(rows, columns, magicWheels);
 
+        String[][] rowsInput = new String[rows][columns];
+
         for (int r = 0; r < rows; r++) {
-            String c = input.readLine();
+            String[] row = input.readLine().split("");
+            rowsInput[r] = row;
         }
+        lost.addRows(rowsInput);
+
 
         for (int m = 0; m < magicWheels; m++) {
             tokens = input.readLine().split(" ");
@@ -37,22 +42,44 @@ public class Main {
             int c_i = Integer.parseInt(tokens[1]);
             // Magic wheel's time travelled
             int t_i = Integer.parseInt(tokens[2]);
+
+            lost.addMagicWheel(r_i, c_i, t_i, m);
         }
 
-        tokens = input.readLine().split(" ");
-        // John's position
-        int r_j = Integer.parseInt(tokens[0]);
-        int c_j = Integer.parseInt(tokens[1]);
-        lost.setJohn(r_j, c_j);
-        // Kate's position
-        int r_k = Integer.parseInt(tokens[2]);
-        int c_k = Integer.parseInt(tokens[3]);
-        lost.setKate(r_k, c_k);
-
-        int[] solution = lost.solve();
+//        tokens = input.readLine().split(" ");
+//        // John's initial position
+//        int r_j = Integer.parseInt(tokens[0]);
+//        int c_j = Integer.parseInt(tokens[1]);
+//        lost.setJohn(r_j, c_j);
+        // Kate's initial position
+//        int r_k = Integer.parseInt(tokens[2]);
+//        int c_k = Integer.parseInt(tokens[3]);
+//        lost.setKate(r_k, c_k);
 
         System.out.printf("Case #%d%n", test_case);
 
-        // PRINT SOLUTION, MAYBE THROW EXCEPTIONS
+        try {
+            tokens = input.readLine().split(" ");
+            // John's initial position
+            int r_j = Integer.parseInt(tokens[0]);
+            int c_j = Integer.parseInt(tokens[1]);
+//            lost.setJohn(r_j, c_j);
+            int john = lost.solveJohn(r_j, c_j);
+            printResult("John", john);
+        } catch (NegativeWeightCycleException e) {
+            System.out.printf("John %s%n", LOST_IN_TIME);
+        }
+        int r_k = Integer.parseInt(tokens[2]);
+        int c_k = Integer.parseInt(tokens[3]);
+        int kate = lost.solveKate(r_k, c_k);
+        printResult("Kate", kate);
+    }
+
+    public static void printResult(String character, int result) {
+        if (result < Lost.INF) {
+            System.out.printf("%s %d%n", character, result);
+        } else {
+            System.out.printf("%s %s%n", character, UNREACHABLE);
+        }
     }
 }
