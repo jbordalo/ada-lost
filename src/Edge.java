@@ -16,18 +16,12 @@ public class Edge {
         return this.head;
     }
 
-    public void setHead(int head) { this.head = head; }
-
     public int getTail() {
         return this.tail;
     }
 
     public int getLabel() {
         return this.label;
-    }
-
-    public void setLabel(int label) {
-        this.label = label;
     }
 
     public String getType() {

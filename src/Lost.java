@@ -20,7 +20,7 @@ public class Lost {
     private final int columns;
     private final int rows;
     // TODO change this to magicWheelTails
-    private final Edge[] magicWheels;
+    private final int[] magicWheels;
 
     public Lost(int rows, int columns, int magicWheels) {
         this.numNodes = rows * columns;
@@ -29,7 +29,7 @@ public class Lost {
         this.rows = rows;
         this.columns = columns;
         // TODO if 0
-        this.magicWheels = new Edge[magicWheels];
+        this.magicWheels = new int[magicWheels];
     }
 
     private void createEdge(String cell, int head, int tail, String neighbour) {
@@ -40,7 +40,7 @@ public class Lost {
         try {
             int index = Integer.parseInt(cell);
             cell = GRASS;
-            this.magicWheels[index - 1] = new Edge(-1, tail, -1, WHEEL);
+            this.magicWheels[index - 1] = tail;
         } catch (NumberFormatException ignored) {
         }
 
@@ -48,12 +48,8 @@ public class Lost {
     }
 
     public void addMagicWheel(int r, int c, int label, int i) {
-        Edge e = this.magicWheels[i];
-
-        e.setLabel(label);
-        e.setHead(r * this.columns + c);
-
-        this.edges.add(e);
+        int tail = this.magicWheels[i];
+        this.edges.add(new Edge(r * this.columns + c, tail, label, WHEEL));
 
         // TODO garbage
     }
