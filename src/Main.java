@@ -47,16 +47,18 @@ public class Main {
 
         System.out.printf("Case #%d%n", test_case);
 
+        tokens = input.readLine().split(" ");
+        // John's initial position
+        int r_j = Integer.parseInt(tokens[0]);
+        int c_j = Integer.parseInt(tokens[1]);
+
         try {
-            tokens = input.readLine().split(" ");
-            // John's initial position
-            int r_j = Integer.parseInt(tokens[0]);
-            int c_j = Integer.parseInt(tokens[1]);
             int john = lost.solveJohn(r_j, c_j);
             printResult("John", john);
         } catch (NegativeWeightCycleException e) {
             System.out.printf("John %s%n", LOST_IN_TIME);
         }
+
         int r_k = Integer.parseInt(tokens[2]);
         int c_k = Integer.parseInt(tokens[3]);
         int kate = lost.solveKate(r_k, c_k);
