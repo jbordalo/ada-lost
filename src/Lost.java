@@ -24,26 +24,35 @@ public class Lost {
         this.numNodes = rows * columns;
         this.edgesJohn = new LinkedList<>();
         this.edgesKate = new LinkedList[this.numNodes];
-        for (int i = 0; i < this.numNodes; i++) {
-            this.edgesKate[i] = new LinkedList<>();
-        }
-
         this.exitNode = -1;
         this.rows = rows;
         this.columns = columns;
         this.magicWheels = new int[magicWheels];
+
+        for (int i = 0; i < this.numNodes; i++) {
+            this.edgesKate[i] = new LinkedList<>();
+        }
     }
 
+    /**
+     * Checks if the character given is a magic wheel,
+     * if so, it saves the tail in the magicWheels
+     * (for later use in the creation of the edges related)
+     * Returns the type of cell (GRASS if it is a magic wheel).
+     */
     private char isMagicWheel(char cell, int tail) {
         int index = Character.getNumericValue(cell);
         if (index > 0 && index <= 9) {
             this.magicWheels[index - 1] = tail;
             return GRASS;
         }
-
         return cell;
     }
 
+    /**
+     * Creates the edge and adds it to the graphs
+     * (may not add to Johns graph if it is not useful - WATER).
+     */
     private void createEdge(char cell, int head, int tail, char neighbour) {
 
         int label = cell == WATER ? 2 : 1;
@@ -61,23 +70,19 @@ public class Lost {
         this.edgesKate[tail].add(e);
     }
 
-    public void addMagicWheel(int r, int c, int label, int i) {
-        int tail = this.magicWheels[i];
-        this.edgesJohn.add(new Edge(r * this.columns + c, tail, label));
-    }
-
+    /**
+     * Given the char grid, this function will connect a node
+     * to the nodes directly above, below and to his sides.
+     */
     public void addRows(char[][] grid) {
-        // NxM
-        int n = this.rows;
-        int m = this.columns;
-
+        char cell;
+        int tail;
         // Connect the grid
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < m; j++) {
+        for (int i = 0; i < this.rows; i++) {
+            for (int j = 0; j < this.columns; j++) {
 
-                char cell = grid[i][j];
-
-                int tail = i * m + j;
+                cell = grid[i][j];
+                tail = i * this.columns + j;
 
                 if (cell == OBSTACLE) continue;
                 if (cell == EXIT) {
@@ -85,39 +90,30 @@ public class Lost {
                     continue;
                 }
 
-                char neighbour;
-                int head;
-
                 // top
-                head = (i - 1) * m + j;
-                if (i - 1 >= 0) {
-                    neighbour = grid[i - 1][j];
-                    this.createEdge(cell, head, tail, neighbour);
-                }
+                if (i - 1 >= 0)
+                    this.createEdge(cell, (i - 1) * this.columns + j, tail, grid[i - 1][j]);
 
                 // right
-                head = i * m + j + 1;
-                if (j + 1 < m) {
-                    neighbour = grid[i][j + 1];
-                    this.createEdge(cell, head, tail, neighbour);
-                }
+                if (j + 1 < this.columns)
+                    this.createEdge(cell, i * this.columns + j + 1, tail, grid[i][j + 1]);
 
                 // bottom
-                head = (i + 1) * m + j;
-                if (i + 1 < n) {
-                    neighbour = grid[i + 1][j];
-                    this.createEdge(cell, head, tail, neighbour);
-                }
+                if (i + 1 < this.rows)
+                    this.createEdge(cell, (i + 1) * this.columns + j, tail, grid[i + 1][j]);
 
                 // left
-                head = i * m + j - 1;
-                if (j - 1 >= 0) {
-                    neighbour = grid[i][j - 1];
-                    this.createEdge(cell, head, tail, neighbour);
-                }
-
+                if (j - 1 >= 0)
+                    this.createEdge(cell, i * this.columns + j - 1, tail, grid[i][j - 1]);
             }
         }
+    }
+
+    /**
+     * Creates the magic wheel edges and adds them to Johns graph.
+     */
+    public void addMagicWheel(int r, int c, int label, int i) {
+        this.edgesJohn.add(new Edge(r * this.columns + c, this.magicWheels[i], label));
     }
 
     private boolean updateLengths(int[] len) {
@@ -162,7 +158,7 @@ public class Lost {
     }
 
     private void exploreNode(int source, boolean[] selected, int[] length, PriorityQueue<SimpleEntry<Integer, Integer>> connected) {
-        for (Edge e: this.edgesKate[source]) {
+        for (Edge e : this.edgesKate[source]) {
             int node = e.getHead();
             if (!selected[node]) {
                 int newLength = length[source] + e.getLabel();
@@ -203,12 +199,17 @@ public class Lost {
         return length[this.exitNode];
     }
 
+    /**
+     * Solves the problem for John using Bellman Ford's algorithm.
+     */
     public int solveJohn(int r, int c) throws NegativeWeightCycleException {
         return this.bellmanFord(r * this.columns + c);
     }
 
+    /**
+     * Solves the problem for Kate using Dijkstra's algorithm.
+     */
     public int solveKate(int r, int c) {
         return this.dijkstra(r * this.columns + c);
     }
-
 }

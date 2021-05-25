@@ -32,6 +32,7 @@ public class Main {
             char[] row = input.readLine().toCharArray();
             rowsInput[r] = row;
         }
+
         lost.addRows(rowsInput);
 
         for (int m = 0; m < magicWheels; m++) {
