@@ -3,13 +3,12 @@ public class Edge {
     private final int head;
     private final int tail;
     private final int label;
-    private final char type;
 
-    public Edge(int head, int tail, int label, char type) {
+    public Edge(int head, int tail, int label) {
         this.head = head;
         this.tail = tail;
         this.label = label;
-        this.type = type;
+
     }
 
     public int getHead() {
@@ -22,10 +21,6 @@ public class Edge {
 
     public int getLabel() {
         return this.label;
-    }
-
-    public char getType() {
-        return this.type;
     }
 
 }

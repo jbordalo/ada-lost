@@ -1,5 +1,7 @@
+import java.util.AbstractMap.SimpleEntry;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.PriorityQueue;
 
 public class Lost {
 
@@ -10,19 +12,23 @@ public class Lost {
     private static final char OBSTACLE = 'O';
     private static final char EXIT = 'X';
 
-    private final boolean JOHN = true;
-    private final boolean KATE = false;
-
     private final int numNodes;
-    private final List<Edge> edges;
+    private final List<Edge> edgesJohn;
+    private final List<Edge>[] edgesKate;
     private int exitNode;
     private final int columns;
     private final int rows;
     private final int[] magicWheels;
 
+    @SuppressWarnings("unchecked")
     public Lost(int rows, int columns, int magicWheels) {
         this.numNodes = rows * columns;
-        this.edges = new LinkedList<>();
+        this.edgesJohn = new LinkedList<>();
+        this.edgesKate = new LinkedList[this.numNodes];
+        for (int i = 0; i < this.numNodes; i++) {
+            this.edgesKate[i] = new LinkedList<>();
+        }
+
         this.exitNode = -1;
         this.rows = rows;
         this.columns = columns;
@@ -48,12 +54,17 @@ public class Lost {
 
         if (neighbour == OBSTACLE) return;
 
-        this.edges.add(new Edge(head, tail, label, cell));
+        Edge e = new Edge(head, tail, label);
+
+        if (cell != WATER && neighbour != WATER)
+            this.edgesJohn.add(e);
+
+        this.edgesKate[tail].add(e);
     }
 
     public void addMagicWheel(int r, int c, int label, int i) {
         int tail = this.magicWheels[i];
-        this.edges.add(new Edge(r * this.columns + c, tail, label, WHEEL));
+        this.edgesJohn.add(new Edge(r * this.columns + c, tail, label));
     }
 
     public void addRows(char[][] grid) {
@@ -110,13 +121,10 @@ public class Lost {
         }
     }
 
-    private boolean updateLengths(int[] len, int[] via, boolean character) {
+    private boolean updateLengths(int[] len, int[] via) {
         boolean changes = false;
 
-        for (Edge e : this.edges) {
-            if (e.getType() == OBSTACLE
-                    || (e.getType() == WATER && character)
-                    || (e.getType() == WHEEL && !character)) continue;
+        for (Edge e : this.edgesJohn) {
 
             int tail = e.getTail();
             int head = e.getHead();
@@ -133,7 +141,9 @@ public class Lost {
         return changes;
     }
 
-    private int bellmanFord(boolean character, int origin) throws NegativeWeightCycleException {
+    // TODO VIA
+
+    private int bellmanFord(int origin) throws NegativeWeightCycleException {
         int[] length = new int[this.numNodes];
         int[] via = new int[this.numNodes];
 
@@ -146,29 +156,68 @@ public class Lost {
         boolean changes = false;
 
         for (int i = 0; i < this.numNodes; i++) {
-            changes = this.updateLengths(length, via, character);
+            changes = this.updateLengths(length, via);
             if (!changes) break;
         }
 
         // Negative-weight cycles detection
-        if (changes && this.updateLengths(length, via, character))
+        if (changes && this.updateLengths(length, via))
             throw new NegativeWeightCycleException();
 
         return length[this.exitNode];
     }
 
+    private void exploreNode(int source, boolean[] selected, int[] length, int[] via, PriorityQueue<SimpleEntry<Integer, Integer>> connected) {
+        for (Edge e: this.edgesKate[source]) {
+            int node = e.getHead();
+            if ( !selected[node] ) {
+                int newLength = length[source] + e.getLabel();
+                if ( newLength < length[node] ) {
+                    boolean nodeIsInQueue = length[node] < INF;
+                    SimpleEntry<Integer, Integer> oldPair = new SimpleEntry<>(length[node], node);
+                    length[node] = newLength;
+                    via[node] = source;
+                    if (nodeIsInQueue) {
+                        // This will emulate a decreaseKey
+                        connected.remove(oldPair);
+                    }
+
+                    connected.add(new SimpleEntry<>(newLength, node));
+                }
+            }
+        }
+    }
+
+    private int dijkstra(int origin) {
+        boolean[] selected = new boolean[ this.numNodes ];
+        int[] length = new int[ this.numNodes ];
+        int[] via = new int[ this.numNodes ];
+        PriorityQueue<SimpleEntry<Integer, Integer>> connected = new PriorityQueue<>(this.numNodes, new EntryComparator());
+
+        for (int v = 0; v < this.numNodes; v++) {
+            selected[v] = false;
+            length[v] = INF;
+        }
+
+        length[origin] = 0;
+        via[origin] = origin;
+
+        connected.add(new SimpleEntry<>(0, origin));
+        do {
+            int node = connected.remove().getValue();
+            selected[node] = true;
+            exploreNode(node, selected, length, via, connected);
+        }
+        while ( !connected.isEmpty() );
+        return length[this.exitNode];
+    }
+
     public int solveJohn(int r, int c) throws NegativeWeightCycleException {
-        return this.bellmanFord(JOHN, r * this.columns + c);
+        return this.bellmanFord(r * this.columns + c);
     }
 
     public int solveKate(int r, int c) {
-        try {
-            return this.bellmanFord(KATE, r * this.columns + c);
-        } catch (NegativeWeightCycleException e) {
-            // Should never happen
-            e.printStackTrace();
-            return -INF;
-        }
+        return this.dijkstra(r * this.columns + c);
     }
 
 }
