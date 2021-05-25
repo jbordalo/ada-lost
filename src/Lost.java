@@ -8,7 +8,6 @@ public class Lost {
     public static final int INF = Integer.MAX_VALUE;
     private static final char GRASS = 'G';
     private static final char WATER = 'W';
-    private static final char WHEEL = 'M';
     private static final char OBSTACLE = 'O';
     private static final char EXIT = 'X';
 
@@ -121,7 +120,7 @@ public class Lost {
         }
     }
 
-    private boolean updateLengths(int[] len, int[] via) {
+    private boolean updateLengths(int[] len) {
         boolean changes = false;
 
         for (Edge e : this.edgesJohn) {
@@ -133,7 +132,6 @@ public class Lost {
                 int newLen = len[tail] + e.getLabel();
                 if (newLen < len[head]) {
                     len[head] = newLen;
-                    via[head] = tail;
                     changes = true;
                 }
             }
@@ -141,42 +139,37 @@ public class Lost {
         return changes;
     }
 
-    // TODO VIA
-
     private int bellmanFord(int origin) throws NegativeWeightCycleException {
         int[] length = new int[this.numNodes];
-        int[] via = new int[this.numNodes];
 
         for (int i = 0; i < this.numNodes; i++)
             length[i] = INF;
 
         length[origin] = 0;
-        via[origin] = 0;
 
         boolean changes = false;
 
         for (int i = 0; i < this.numNodes; i++) {
-            changes = this.updateLengths(length, via);
+            changes = this.updateLengths(length);
             if (!changes) break;
         }
 
         // Negative-weight cycles detection
-        if (changes && this.updateLengths(length, via))
+        if (changes && this.updateLengths(length))
             throw new NegativeWeightCycleException();
 
         return length[this.exitNode];
     }
 
-    private void exploreNode(int source, boolean[] selected, int[] length, int[] via, PriorityQueue<SimpleEntry<Integer, Integer>> connected) {
+    private void exploreNode(int source, boolean[] selected, int[] length, PriorityQueue<SimpleEntry<Integer, Integer>> connected) {
         for (Edge e: this.edgesKate[source]) {
             int node = e.getHead();
-            if ( !selected[node] ) {
+            if (!selected[node]) {
                 int newLength = length[source] + e.getLabel();
-                if ( newLength < length[node] ) {
+                if (newLength < length[node]) {
                     boolean nodeIsInQueue = length[node] < INF;
                     SimpleEntry<Integer, Integer> oldPair = new SimpleEntry<>(length[node], node);
                     length[node] = newLength;
-                    via[node] = source;
                     if (nodeIsInQueue) {
                         // This will emulate a decreaseKey
                         connected.remove(oldPair);
@@ -189,9 +182,8 @@ public class Lost {
     }
 
     private int dijkstra(int origin) {
-        boolean[] selected = new boolean[ this.numNodes ];
-        int[] length = new int[ this.numNodes ];
-        int[] via = new int[ this.numNodes ];
+        boolean[] selected = new boolean[this.numNodes];
+        int[] length = new int[this.numNodes];
         PriorityQueue<SimpleEntry<Integer, Integer>> connected = new PriorityQueue<>(this.numNodes, new EntryComparator());
 
         for (int v = 0; v < this.numNodes; v++) {
@@ -200,15 +192,14 @@ public class Lost {
         }
 
         length[origin] = 0;
-        via[origin] = origin;
 
         connected.add(new SimpleEntry<>(0, origin));
         do {
             int node = connected.remove().getValue();
             selected[node] = true;
-            exploreNode(node, selected, length, via, connected);
+            exploreNode(node, selected, length, connected);
         }
-        while ( !connected.isEmpty() );
+        while (!connected.isEmpty());
         return length[this.exitNode];
     }
 
